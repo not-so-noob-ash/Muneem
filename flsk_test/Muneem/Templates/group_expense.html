@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Expense</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Group Expense</h1>
+        <form action="{{ url_for('submit_group_expense') }}" method="post" class="mt-4" onsubmit="return validateAmounts()">
+            <div class="form-group">
+                <label for="itemName">Item Name:</label>
+                <input type="text" class="form-control" id="itemName" name="itemName" required>
+            </div>
+            
+            <!-- Category Dropdown -->
+            <div class="form-group mt-3">
+                <label for="category">Category:</label>
+                <select class="form-control" id="category" name="category" required>
+                    <option value="Food">Food</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="description">Description:</label>
+                <textarea class="form-control" id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group mt-3">
+                <label for="date">Date:</label>
+                <input type="date" class="form-control" id="date" name="date" required>
+            </div>
+            <div class="form-group mt-3">
+                <label for="amount">Total Amount:</label>
+                <input type="number" class="form-control" id="amount" name="amount" min="0" step="0.01" required>
+            </div>
+            
+            <!-- Paid By Section -->
+            <div class="form-group mt-3">
+                <label>Paid By:</label><br>
+                <!-- Payee 1 -->
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="paidBy" value="Person1" id="paidBy1" onchange="togglePaidInput(this)">
+                    <label class="form-check-label" for="paidBy1">Person1</label>
+                    <input type="number" class="form-control d-none paid-input" id="paidBy1Input" name="Person1_amount" placeholder="Amount" min="0" step="0.01" onchange="updateRemainingAmount()" onclick="clearInput(this)">
+                </div>
+                <!-- Payee 2 -->
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="paidBy" value="Person2" id="paidBy2" onchange="togglePaidInput(this)">
+                    <label class="form-check-label" for="paidBy2">Person2</label>
+                    <input type="number" class="form-control d-none paid-input" id="paidBy2Input" name="Person2_amount" placeholder="Amount" min="0" step="0.01" onchange="updateRemainingAmount()" onclick="clearInput(this)">
+                </div>
+                <!-- Payee 3 -->
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="paidBy" value="Person3" id="paidBy3" onchange="togglePaidInput(this)">
+                    <label class="form-check-label" for="paidBy3">Person3</label>
+                    <input type="number" class="form-control d-none paid-input" id="paidBy3Input" name="Person3_amount" placeholder="Amount" min="0" step="0.01" onchange="updateRemainingAmount()" onclick="clearInput(this)">
+                </div>
+            </div>
+
+            <!-- Split Among Section -->
+            <div class="form-group mt-3">
+                <label>Split Among:</label><br>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="splitAmong" value="Person1" id="splitAmong1" onclick="updateRemainingAmount()">
+                    <label class="form-check-label" for="splitAmong1">Person1</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="splitAmong" value="Person2" id="splitAmong2" onclick="updateRemainingAmount()">
+                    <label class="form-check-label" for="splitAmong2">Person2</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="splitAmong" value="Person3" id="splitAmong3" onclick="updateRemainingAmount()">
+                    <label class="form-check-label" for="splitAmong3">Person3</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        // Toggle visibility of the amount input fields and manage pre-filled values
+        function togglePaidInput(checkbox) {
+            const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+            const inputId = checkbox.id + "Input";
+            const inputElement = document.getElementById(inputId);
+
+            // If checkbox is unchecked, clear the input field
+            if (!checkbox.checked) {
+                inputElement.classList.add('d-none');
+                inputElement.value = '';  // Clear the value
+            } else {
+                inputElement.classList.remove('d-none');
+                inputElement.value = totalAmount;  // Set value to total amount by default
+            }
+
+            updateRemainingAmount();
+        }
+
+        // Update the remaining amount when a payee modifies their input
+        function updateRemainingAmount() {
+            const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+            let remainingAmount = totalAmount;
+
+            // Get all checked checkboxes for paidBy
+            const checkedPayees = document.querySelectorAll('.form-check-input:checked');
+            const paidInputs = document.querySelectorAll('.paid-input:not(.d-none)');
+
+            // First, calculate the remaining amount by subtracting the amounts already filled in
+            paidInputs.forEach(input => {
+                const amount = parseFloat(input.value) || 0;
+                remainingAmount -= amount;
+            });
+
+            // Now, fill in the remaining amount for unchecked checkboxes
+            checkedPayees.forEach(checkbox => {
+                if (!document.getElementById(checkbox.id + "Input").value) {
+                    document.getElementById(checkbox.id + "Input").value = remainingAmount / checkedPayees.length;
+                }
+            });
+        }
+
+        // Clear input value when clicked (after it was filled by default)
+        function clearInput(input) {
+            if (input.value == parseFloat(document.getElementById('amount').value)) {
+                input.value = '';  // Clear value when clicked
+            }
+        }
+
+        // Validate that the total paid amount equals the total amount
+        function validateAmounts() {
+            const totalAmount = parseFloat(document.getElementById('amount').value) || 0;
+            const paidInputs = document.querySelectorAll('.paid-input:not(.d-none)');
+            let sum = 0;
+
+            paidInputs.forEach(input => {
+                sum += parseFloat(input.value) || 0;
+            });
+
+            if (sum !== totalAmount) {
+                alert(`The total paid amount (${sum}) does not match the total amount (${totalAmount}).`);
+                return false;
+            }
+
+            return true;
+        }
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

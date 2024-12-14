@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Friends</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">My Friends</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Friend's Name</th>
+                    <th>Email</th>
+                    <th>Added On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for friend in friends %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ friend.username }}</td>
+                    <td>{{ friend.email_address }}</td>
+                    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
